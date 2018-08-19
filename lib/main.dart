@@ -26,7 +26,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Exercise pompes = new Exercise(
-      "Pompes",
+      "Toto",
       new Icon(Icons.directions_run),
       Colors.white);
 
