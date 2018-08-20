@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'Exercise.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class ExerciseSheet extends StatefulWidget{
   final Exercise exercise;
@@ -19,6 +21,8 @@ class _ExerciseSheetState extends State<ExerciseSheet> {
 
   @override
   Widget build (BuildContext context) {
+    DocumentReference firestore = Firestore.instance.collection('Utilisateurs').document('Xyphos');
+
     return new Container(
       height: 330.0,
       child: new Hero(
@@ -81,11 +85,17 @@ class _ExerciseSheetState extends State<ExerciseSheet> {
                 new Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    new Expanded(child: IconButton(icon: new Icon(Icons.add_circle), iconSize: 96.0, onPressed: null)),
+                    new Expanded(child: IconButton(icon: new Icon(Icons.add_circle), iconSize: 96.0, onPressed: addLog)),
                     new Expanded(child: IconButton(icon: new Icon(Icons.pause_circle_filled), iconSize: 96.0,onPressed: null)),
                   ],
                 ), // buttonsRow
-
+                new StreamBuilder<QuerySnapshot>(
+                  stream : firestore.collection('UserLog').where('Exercice', isEqualTo: 'Pompes').snapshots(),
+                  builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                    if (!snapshot.hasData) return const Text('Loading...');
+                    return new Text(snapshot.data.documents.length.toString());
+                    },
+                ),
               ],
             ),
           ),
@@ -94,12 +104,12 @@ class _ExerciseSheetState extends State<ExerciseSheet> {
     );
   }
 
+  void addLog() {
+    Firestore.instance.collection('Utilisateurs').document('Xyphos').collection('UserLog')
+        .document(DateTime.now().toString()).setData({'Exercice': exercise.title, 'Rep' : exercise.repNumber, 'Date' : DateTime.now()});
+  }
+
   void switchHeight(){
-    /*
-    setState(() {
-      height = height == null ? 330.0 : null;
-      arrowIcon = height == null ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up;
-    });*/
     Navigator.of(context).push(MaterialPageRoute<Null>(
         builder: (BuildContext context) {
           return new ExerciseSheetExpanded(exercise);

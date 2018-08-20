@@ -1,8 +1,31 @@
 import 'package:flutter/material.dart';
 import 'Exercise.dart';
 import 'ExerciseButton.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() => runApp(new MyApp());
+/*
+https://firebase.google.com/docs/flutter/setup
+https://github.com/flutter/plugins
+https://pub.dartlang.org/packages/firebase_auth#-example-tab-
+https://codelabs.developers.google.com/codelabs/flutter-firebase/index.html#8
+https://firebase.google.com/docs/firestore/query-data/queries?authuser=0
+https://firebase.google.com/docs/auth/?authuser=0
+https://flutter.io/android-release/
+https://stackoverflow.com/questions/50661220/flutter-firestore-offline-capabilities
+https://www.youtube.com/watch?v=HzKdJekhXoc
+https://www.youtube.com/watch?v=8M-Fa239Hy4
+https://stackoverflow.com/questions/29182581/global-variables-in-dart
+https://console.firebase.google.com/u/1/project/exercise-2018/overview
+*/
+
+
+Future<void> main() {
+  runApp(new MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
@@ -26,7 +49,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Exercise pompes = new Exercise(
-      "Toto",
+      "Pompes",
       new Icon(Icons.directions_run),
       Colors.white);
 
@@ -46,30 +69,36 @@ class _MyHomePageState extends State<MyHomePage> {
         crossAxisSpacing: 10.0,
         crossAxisCount: 4,
         children: <Widget>[
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
-          new ExerciseButton(context, pompes, _scaffoldKey),
+          new IconButton(icon: new Icon(Icons.check_circle), onPressed: signIn),
           new ExerciseButton(context, pompes, _scaffoldKey),
         ],
       )
     );
   }
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  void dataBaseTest(FirebaseUser user) {
+    Firestore.instance.collection('Utilisateurs').document(user.displayName)
+        .setData({ 'Nom': 'Antoine'});
+  }
+
+  void signIn(){
+     _handleSignIn()
+        .then((FirebaseUser user) => dataBaseTest(user))
+        .catchError((e) => print(e));
+  }
+
+  Future<FirebaseUser> _handleSignIn() async {
+    GoogleSignInAccount googleUser = await _googleSignIn.signIn();
+    GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+    FirebaseUser user = await _auth.signInWithGoogle(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+    print("signed in " + user.displayName);
+    return user;
+  }
 }
+
